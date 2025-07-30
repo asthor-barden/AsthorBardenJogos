@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labirinto Mágico</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+    <style>
+        :root {
+            --scratch-blue: #4c97ff;
+            --scratch-purple: #855cd6;
+            --scratch-pink: #ff4c8c;
+            --scratch-yellow: #ffb100;
+            --scratch-yellow2: #ff6600;
+            --scratch-orange: #ffab19;
+            --scratch-green: #00ff00;
+            --scratch-light-green: #a1ff8c;
+            --scratch-bg: #e6f3ff;
+            --scratch-text: #333333;
+            --scratch-shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--scratch-blue), var(--scratch-purple));
+            color: var(--scratch-text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            overflow-x: hidden;
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 1200px;
+            height: auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            border-radius: 25px;
+            box-shadow: 0 15px 35px var(--scratch-shadow);
+            background: var(--scratch-bg);
+            overflow: hidden;
+        }
+
+        #game-header {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--scratch-yellow);
+            border-bottom: 5px solid var(--scratch-orange);
+            z-index: 10;
+        }
+
+        #game-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--scratch-blue);
+            text-shadow: 0 0 10px var(--scratch-shadow);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        #game-stats {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .stat-box {
+            background: var(--scratch-bg);
+            padding: 0.5rem;
+            border-radius: 15px;
+            border: 3px solid var(--scratch-blue);
+            min-width: 100px;
+            text-align: center;
+            box-shadow: 0 5px 10px var(--scratch-shadow);
+            flex: 1;
+            max-width: 120px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--scratch-purple);
+            font-weight: bold;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--scratch-text);
+        }
+
+        #game-content {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            padding: 1rem;
+            gap: 1rem;
+            height: auto;
+        }
+
+        #scene-container {
+            width: 100%;
+            height: 40vh;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 0 25px var(--scratch-shadow);
+            background: var(--scratch-bg);
+            position: relative;
+        }
+
+        #controls-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 1rem;
+            border: 4px solid var(--scratch-blue);
+            box-shadow: 0 0 20px var(--scratch-shadow);
+        }
+
+        .panel-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            color: var(--scratch-purple);
+            padding-bottom: 0.5rem;
+            border-bottom: 3px dotted var(--scratch-blue);
+        }
+
+        #command-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .command-btn {
+            background: linear-gradient(135deg, var(--scratch-blue), var(--scratch-purple));
+            border: none;
+            border-radius: 15px;
+            padding: 0.8rem;
+            color: white;
+            font-size: 1.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px var(--scratch-shadow);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            aspect-ratio: 1;
+        }
+
+        .command-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px var(--scratch-shadow);
+            filter: brightness(1.2);
+        }
+
+        #command-sequence {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 0.8rem;
+            min-height: 120px;
+            max-height: 180px;
+            overflow: auto;
+            margin-bottom: 1rem;
+            border: 3px dashed var(--scratch-blue);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: flex-start;
+        }
+
+        .command-chip {
+            background: linear-gradient(135deg, var(--scratch-orange), var(--scratch-yellow));
+            padding: 0.5rem 0.8rem;
+            border-radius: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 3px 6px var(--scratch-shadow);
+        }
+
+        .remove-chip {
+            background: none;
+            border: none;
+            color: var(--scratch-pink);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0 0.3rem;
+        }
+
+        #action-buttons {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.8rem;
+            margin-top: auto;
+        }
+
+        .action-btn {
+            padding: 0.8rem;
+            border-radius: 15px;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 8px var(--scratch-shadow);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #execute-btn {
+            background: linear-gradient(135deg, var(--scratch-green), var(--scratch-light-green));
+            color: var(--scratch-text);
+        }
+
+        #execute-btn:hover {
+            background: linear-gradient(135deg, #00ff88, var(--scratch-green));
+            transform: translateY(-3px);
+        }
+
+        #reset-btn {
+            background: linear-gradient(135deg, var(--scratch-pink), #ff9999);
+            color: var(--scratch-text);
+        }
+
+        #reset-btn:hover {
+            background: linear-gradient(135deg, #ff8888, var(--scratch-pink));
+            transform: translateY(-3px);
+        }
+
+        #clear-btn {
+            background: linear-gradient(135deg, var(--scratch-blue), #99c2ff);
+            color: var(--scratch-text);
+        }
+
+        #clear-btn:hover {
+            background: linear-gradient(135deg, #66a3ff, var(--scratch-blue));
+            transform: translateY(-3px);
+        }
+
+        #level-indicator {
+            position: absolute;
+            top: 0.5rem;
+            left: 0.5rem;
+            background: var(--scratch-yellow);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            border: 3px solid var(--scratch-orange);
+            z-index: 10;
+            font-size: 0.9rem;
+            color: var(--scratch-purple);
+        }
+
+        #player-info {
+            position: absolute;
+            bottom: 0.5rem;
+            left: 0.5rem;
+            background: var(--scratch-blue);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            border: 3px solid var(--scratch-purple);
+            z-index: 10;
+        }
+
+        .player-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: var(--scratch-yellow);
+            font-size: 1.3rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid var(--scratch-blue);
+        }
+
+        #player-name {
+            font-weight: bold;
+            font-size: 1rem;
+            color: var(--scratch-text);
+        }
+
+        #character-direction {
+            position: absolute;
+            bottom: 4rem;
+            left: 0.5rem;
+            background: var(--scratch-purple);
+            padding: 0.4rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            color: white;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #completion-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--scratch-yellow);
+            padding: 1.5rem;
+            border-radius: 20px;
+            text-align: center;
+            border: 4px solid var(--scratch-orange);
+            z-index: 100;
+            display: none;
+            animation: bounce 1s ease;
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translate(-50%, -50%) scale(1);}
+            40% {transform: translate(-50%, -50%) scale(1.1);}
+            60% {transform: translate(-50%, -50%) scale(1.05);}
+        }
+
+        #message-title {
+            font-size: 1.8rem;
+            color: var(--scratch-green);
+            margin-bottom: 1rem;
+        }
+
+        #message-details {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--scratch-text);
+        }
+
+        #next-level-btn {
+            background: linear-gradient(135deg, var(--scratch-orange), var(--scratch-yellow2));
+            border: none;
+            color: var(--scratch-text);
+            padding: 0.8rem 1.5rem;
+            font-size: 1.2rem;
+            border-radius: 30px;
+            cursor: pointer;
+            width: 100%;
+            max-width: 200px;
+            margin: 0 auto;
+        }
+
+        #music-control {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: var(--scratch-yellow);
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            font-size: 1.3rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 20;
+        }
+
+        #exit-label {
+            position: absolute;
+            background: var(--scratch-green);
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            z-index: 10;
+            font-weight: bold;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        #help-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            padding: 15px;
+        }
+
+        #help-content {
+            background: var(--scratch-bg);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 4px solid var(--scratch-blue);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        #help-content h2 {
+            font-size: 1.5rem;
+            color: var(--scratch-purple);
+            margin-bottom: 1rem;
+        }
+
+        #help-content p {
+            font-size: 1rem;
+            color: var(--scratch-text);
+            margin-bottom: 1rem;
+            text-align: left;
+            padding: 0 10px;
+        }
+
+        #help-content button {
+            background: linear-gradient(135deg, var(--scratch-green), #66ff99);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            color: var(--scratch-text);
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+            max-width: 200px;
+        }
+
+        .star {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ffb100"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>') no-repeat center;
+            background-size: contain;
+            animation: star-fall 2s ease-out forwards;
+        }
+
+        @keyframes star-fall {
+            0% { transform: translateY(-100vh) scale(0.5); opacity: 1; }
+            100% { transform: translateY(100vh) scale(1); opacity: 0; }
+        }
+
+        .icone-comando {
+            display: inline-block;
+            font-size: 1.3rem;
+        }
+
+        .girar-invertido {
+            transform: rotate(180deg) scaleX(-1);
+        }
+
+        /* Desktop Styles */
+        @media (min-width: 769px) {
+            #game-header {
+                flex-direction: row;
+                padding: 1rem 1.5rem;
+            }
+            
+            #game-title {
+                margin-bottom: 0;
+                font-size: 2.2rem;
+            }
+            
+            #game-stats {
+                justify-content: flex-end;
+                gap: 1rem;
+            }
+            
+            .stat-box {
+                min-width: 120px;
+            }
+            
+            #game-content {
+                flex-direction: row;
+                height: calc(100vh - 80px);
+            }
+            
+            #scene-container {
+                height: 100%;
+                flex: 3;
+                min-height: 400px;
+            }
+            
+            #controls-container {
+                flex: 1;
+                height: 100%;
+                min-height: 400px;
+            }
+            
+            #command-buttons {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1rem;
+            }
+            
+            .command-btn {
+                padding: 1.2rem;
+                font-size: 2.5rem;
+            }
+            
+            #command-sequence {
+                min-height: 120px;
+                max-height: 200px;
+            }
+            
+            #action-buttons {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+            
+            #execute-btn {
+                grid-column: span 2;
+            }
+            
+            #level-indicator {
+                top: 1rem;
+                left: 1rem;
+                padding: 0.75rem 1.5rem;
+                font-size: 1.1rem;
+            }
+            
+            #player-info {
+                bottom: 1rem;
+                left: 1rem;
+                padding: 0.75rem 1.5rem;
+            }
+            
+            #character-direction {
+                bottom: 5rem;
+                left: 1rem;
+                padding: 0.5rem 1rem;
+                font-size: 1.1rem;
+            }
+            
+            #completion-message {
+                padding: 2rem 3rem;
+            }
+            
+            #music-control {
+                top: 1rem;
+                right: 1rem;
+                width: 45px;
+                height: 45px;
+                font-size: 1.8rem;
+            }
+        }
+        
+        /* Loading indicator */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .loader {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #4c97ff;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-overlay">
+        <div class="loader"></div>
+    </div>
+    
+    <div id="game-container">
+        <div id="music-control">🎵</div>
+        <div id="help-overlay">
+            <div id="help-content">
+                <h2>Bem-vindo ao Labirinto Mágico! 🌟</h2>
+                <p>Guie o gatinho até a CHEGADA:</p>
+                <p><span style="font-size: 1.5rem;">↑</span> <strong>Frente</strong>: Anda na direção do rosto.</p>
+                <p><span style="font-size: 1.5rem;">⟲</span> <strong>Esquerda</strong>: Girar para a esquerda.</p>
+                <p><span style="font-size: 1.5rem;">⟳</span> <strong>Direita</strong>: Girar para a direita.</p>
+                <button id="close-help">COMEÇAR!</button>
+            </div>
+        </div>
+        <div id="star-container"></div>
+        <div id="game-header">
+            <div id="game-title">LABIRINTO MÁGICO</div>
+            <div id="game-stats">
+                <div class="stat-box">
+                    <div class="stat-label">FASE</div>
+                    <div class="stat-value" id="level-display">1/5</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">MOVIMENTOS</div>
+                    <div class="stat-value" id="moves-display">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">TEMPO</div>
+                    <div class="stat-value" id="time-display">00:00</div>
+                </div>
+            </div>
+        </div>
+        <div id="game-content">
+            <div id="scene-container">
+                <div id="level-indicator">Nível: <span id="level-name">Fácil</span></div>
+                <div id="player-info">
+                    <div class="player-avatar">🐱</div>
+                    <div id="player-name">Amiguinho</div>
+                </div>
+                <div id="character-direction">
+                    <span id="direction-indicator">⬆️</span>
+                    <span id="direction-text">Olhando para: Norte</span>
+                </div>
+                <div id="exit-label">🏁 CHEGADA</div>
+                <div id="completion-message">
+                    <div id="message-title">PARABÉNS! 🎉</div>
+                    <div id="message-details">Você completou em <span id="final-moves">0</span> movimentos!</div>
+                    <button id="next-level-btn">PRÓXIMA FASE</button>
+                </div>
+            </div>
+            <div id="controls-container">
+                <div class="panel-title">COMANDOS DO PERSONAGEM</div>
+                <div id="command-buttons">
+                    <button class="command-btn" data-command="FRENTE">⬆️</button>
+                    <button class="command-btn" data-command="DIREITA">
+                        <span style="display:inline-block; transform: rotate(180deg);">↪️</span>
+                    </button>
+                    <button class="command-btn" data-command="ESQUERDA">
+                        <span style="display:inline-block; transform: rotate(180deg);">↩️</span>
+                    </button>
+                </div>
+                <div class="panel-title">SEQUÊNCIA DE COMANDOS</div>
+                <div id="command-sequence"></div>
+                <div id="action-buttons">
+                    <button id="execute-btn">▶️ EXECUTAR</button>
+                    <button id="reset-btn">🔄 REINICIAR</button>
+                    <button id="clear-btn">🗑️ LIMPAR</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <audio id="bg-music" loop>
+        <source src="Lofi do gato.mp3" type="audio/mpeg">
+        Seu navegador não suporta áudio HTML5.
+    </audio>
+
+    <audio id="move-sound">
+        <source src="Pulo - Efeito Sonoro.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="turn-sound">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="win-sound">
+        <source src="Gato Miau Efeitos Sonoros.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="error-sound">
+        <source src="Resposta errada Efeito sonoro.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        const gameConfig = {
+            levels: [
+                { name: "Iniciante", size: 3, moves: 5, complexity: 0.05 },
+                { name: "Fácil", size: 4, moves: 9, complexity: 0.1 },
+                { name: "Médio", size: 5, moves: 12, complexity: 0.12 },
+                { name: "Difícil", size: 7, moves: 15, complexity: 0.15 },
+                { name: "Desafiante", size: 10, moves: 25, complexity: 0.20 },
+                { name: "impossível", size: 15, moves: 35, complexity: 0.25 }
+            ],
+            currentLevel: 0,
+            player: {
+                name: "Amiguinho",
+                avatar: "🐱",
+                moves: 0,
+                startTime: null
+            },
+            maze: null,
+            characterPosition: { x: 0, y: 0 },
+            exitPosition: { x: 0, y: 0 },
+            direction: 0,
+            commands: [],
+            timer: null,
+            musicPlaying: true
+        };
+
+        const dom = {
+            sceneContainer: document.getElementById('scene-container'),
+            commandSequence: document.getElementById('command-sequence'),
+            movesDisplay: document.getElementById('moves-display'),
+            timeDisplay: document.getElementById('time-display'),
+            levelDisplay: document.getElementById('level-display'),
+            levelName: document.getElementById('level-name'),
+            completionMessage: document.getElementById('completion-message'),
+            finalMoves: document.getElementById('final-moves'),
+            playerName: document.getElementById('player-name'),
+            charDirection: document.getElementById('character-direction'),
+            directionText: document.getElementById('direction-text'),
+            directionIndicator: document.getElementById('direction-indicator'),
+            exitLabel: document.getElementById('exit-label'),
+            starContainer: document.getElementById('star-container'),
+            loadingOverlay: document.getElementById('loading-overlay')
+        };
+
+        const sounds = {
+            bgMusic: document.getElementById('bg-music'),
+            move: document.getElementById('move-sound'),
+            turn: document.getElementById('turn-sound'),
+            win: document.getElementById('win-sound'),
+            error: document.getElementById('error-sound')
+        };
+
+        let scene, camera, renderer, character, characterGroup, controls;
+        let grassTexture;
+        let initialized = false;
+
+        function initThreeJS() {
+            // Garantir que o container tenha dimensões antes de criar o renderizador
+            if (dom.sceneContainer.offsetWidth === 0 || dom.sceneContainer.offsetHeight === 0) {
+                setTimeout(initThreeJS, 100);
+                return;
+            }
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xe6f3ff);
+            scene.fog = new THREE.Fog(0xe6f3ff, 10, 30);
+
+            camera = new THREE.PerspectiveCamera(85, dom.sceneContainer.offsetWidth / dom.sceneContainer.offsetHeight, 0.1, 1000);
+            camera.position.set(0, 15, -15);
+            camera.rotation.x = Math.PI;
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setClearColor(0xe6f3ff);
+            renderer.setSize(dom.sceneContainer.offsetWidth, dom.sceneContainer.offsetHeight);
+            renderer.shadowMap.enabled = true;
+            dom.sceneContainer.appendChild(renderer.domElement);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(10, 20, 15);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.minDistance = 5;
+            controls.maxDistance = 20;
+            controls.maxPolarAngle = Math.PI / 2;
+            
+
+            const textureLoader = new THREE.TextureLoader();
+            grassTexture = textureLoader.load('https://threejs.org/examples/textures/terrain/grasslight-big.jpg');
+            grassTexture.wrapS = THREE.RepeatWrapping;
+            grassTexture.wrapT = THREE.RepeatWrapping;
+
+            animate();
+            initialized = true;
+            
+            // Esconder o loader quando tudo estiver pronto
+            setTimeout(() => {
+                if (dom.loadingOverlay) dom.loadingOverlay.style.display = 'none';
+            }, 500);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Só atualiza se o Three.js estiver inicializado
+            if (initialized) {
+                updateExitLabelPosition();
+                controls.update();
+                renderer.render(scene, camera);
+            }
+        }
+
+        function updateExitLabelPosition() {
+            if (!gameConfig.maze || !initialized) return;
+            
+            const size = gameConfig.levels[gameConfig.currentLevel].size;
+            const scale = 2;
+            const vector = new THREE.Vector3(
+                (gameConfig.exitPosition.x - size / 2) * scale + scale / 2,
+                2,
+                (gameConfig.exitPosition.y - size / 2) * scale + scale / 2
+            );
+            vector.project(camera);
+            const x = (vector.x * 0.5 + 0.5) * dom.sceneContainer.offsetWidth;
+            const y = (-vector.y * 0.5 + 0.5) * dom.sceneContainer.offsetHeight;
+            dom.exitLabel.style.left = `${x}px`;
+            dom.exitLabel.style.top = `${y}px`;
+        }
+
+        function generateMaze(size, complexity) {
+            const maze = Array(size).fill().map(() => Array(size).fill(1));
+            maze[0][0] = 0;
+            maze[size-1][size-1] = 2;
+            
+            const stack = [{x: 0, y: 0}];
+            const directions = [
+                {dx: 0, dy: -2},
+                {dx: 2, dy: 0},
+                {dx: 0, dy: 2},
+                {dx: -2, dy: 0}
+            ];
+            
+            while (stack.length > 0) {
+                const current = stack.pop();
+                const {x, y} = current;
+                
+                shuffleArray(directions);
+                
+                for (const dir of directions) {
+                    const nx = x + dir.dx;
+                    const ny = y + dir.dy;
+                    
+                    if (nx >= 0 && nx < size && ny >= 0 && ny < size && maze[ny][nx] === 1) {
+                        maze[y + dir.dy/2][x + dir.dx/2] = 0;
+                        maze[ny][nx] = 0;
+                        stack.push({x: nx, y: ny});
+                    }
+                }
+            }
+            
+            maze[size-1][size-1] = 2;
+            
+            for (let y = 0; y < size; y++) {
+                for (let x = 0; x < size; x++) {
+                    if (maze[y][x] === 1 && Math.random() < complexity) {
+                        maze[y][x] = 0;
+                    }
+                }
+            }
+
+            const exitX = size - 1;
+            const exitY = size - 1;
+            const neighbors = [];
+            if (exitY > 0) neighbors.push({x: exitX, y: exitY-1});
+            if (exitX < size-1) neighbors.push({x: exitX+1, y: exitY});
+            if (exitY < size-1) neighbors.push({x: exitX, y: exitY+1});
+            if (exitX > 0) neighbors.push({x: exitX-1, y: exitY});
+            
+            let wallCount = 0;
+            neighbors.forEach(n => {
+                if (maze[n.y][n.x] === 1) wallCount++;
+            });
+            
+            if (wallCount >= 2) {
+                const randIndex = Math.floor(Math.random() * neighbors.length);
+                const n = neighbors[randIndex];
+                maze[n.y][n.x] = 0;
+            }
+
+            gameConfig.exitPosition = { x: size - 1, y: size - 1 };
+            return maze;
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function renderMaze(maze) {
+            if (!initialized) return;
+            
+            while (scene.children.length > 2) {
+                scene.remove(scene.children[2]);
+            }
+
+            const size = maze.length;
+            const scale = 2;
+
+            grassTexture.repeat.set(size, size);
+            const floorGeometry = new THREE.PlaneGeometry(size * scale, size * scale);
+            const floorMaterial = new THREE.MeshStandardMaterial({
+                map: grassTexture,
+                roughness: 0.9,
+                metalness: 0
+            });
+            const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+            floor.rotation.x = -Math.PI / 2;
+            floor.position.y = 0;
+            floor.receiveShadow = true;
+            scene.add(floor);
+
+            const wallColors = [0x4c97ff, 0x855cd6, 0xff4c8c];
+            for (let y = 0; y < size; y++) {
+                for (let x = 0; x < size; x++) {
+                    const cell = maze[y][x];
+
+                    if (cell === 1) {
+                        const wallGeometry = new THREE.BoxGeometry(scale, scale, scale);
+                        const wallMaterial = new THREE.MeshStandardMaterial({
+                            color: wallColors[Math.floor(Math.random() * wallColors.length)],
+                            roughness: 0.6,
+                            metalness: 0.2
+                        });
+                        const wall = new THREE.Mesh(wallGeometry, wallMaterial);
+                        wall.position.set(
+                            (x - size / 2) * scale + scale / 2,
+                            scale / 2,
+                            (y - size / 2) * scale + scale / 2
+                        );
+                        wall.castShadow = true;
+                        wall.receiveShadow = true;
+                        scene.add(wall);
+                    } else if (cell === 2) {
+                        const arrivalGeometry = new THREE.PlaneGeometry(scale * 0.9, scale * 0.9);
+                        const arrivalMaterial = new THREE.MeshBasicMaterial({ 
+                            color: 0x00ff00,
+                            side: THREE.DoubleSide
+                        });
+                        const arrivalPlane = new THREE.Mesh(arrivalGeometry, arrivalMaterial);
+                        arrivalPlane.rotation.x = -Math.PI / 2;
+                        arrivalPlane.position.set(
+                            (x - size / 2) * scale + scale / 2,
+                            0.1,
+                            (y - size / 2) * scale + scale / 2
+                        );
+                        scene.add(arrivalPlane);
+                    }
+                }
+            }
+
+            if (characterGroup) scene.remove(characterGroup);
+
+            characterGroup = new THREE.Group();
+
+            const bodyGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+            const bodyMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0xffa500,
+                emissive: 0xff8c00,
+                emissiveIntensity: 0.2
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 0.5;
+            characterGroup.add(body);
+
+            const headGeometry = new THREE.SphereGeometry(0.4, 32, 32);
+            const head = new THREE.Mesh(headGeometry, bodyMaterial);
+            head.position.set(0, 1.2, 0.5);
+            characterGroup.add(head);
+
+            const earGeometry = new THREE.ConeGeometry(0.2, 0.4, 4);
+            const earMaterial = new THREE.MeshStandardMaterial({ color: 0xffa500 });
+            
+            const leftEar = new THREE.Mesh(earGeometry, earMaterial);
+            leftEar.position.set(-0.3, 1.5, 0.4);
+            leftEar.rotation.z = Math.PI/6;
+            characterGroup.add(leftEar);
+            
+            const rightEar = new THREE.Mesh(earGeometry, earMaterial);
+            rightEar.position.set(0.3, 1.5, 0.4);
+            rightEar.rotation.z = -Math.PI/6;
+            characterGroup.add(rightEar);
+
+            const eyeGeometry = new THREE.SphereGeometry(0.1, 16, 16);
+            const eyeMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            
+            const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            leftEye.position.set(-0.18, 1.25, 0.8);
+            characterGroup.add(leftEye);
+            
+            const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            rightEye.position.set(0.18, 1.25, 0.8);
+            characterGroup.add(rightEye);
+
+            const pupilGeometry = new THREE.SphereGeometry(0.05, 16, 16);
+            const pupilMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff });
+            
+            const leftPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+            leftPupil.position.set(-0.185, 1.25, 0.87);
+            characterGroup.add(leftPupil);
+            
+            const rightPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+            rightPupil.position.set(0.185, 1.25, 0.87);
+            characterGroup.add(rightPupil);
+
+            const noseGeometry = new THREE.SphereGeometry(0.06, 16, 16);
+            const noseMaterial = new THREE.MeshBasicMaterial({ color: 0xff69b4 });
+            const nose = new THREE.Mesh(noseGeometry, noseMaterial);
+            nose.position.set(0, 1.15, 0.85);
+            characterGroup.add(nose);
+
+            const whiskerGeometry = new THREE.CylinderGeometry(0.01, 0.01, 0.3, 8);
+            const whiskerMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            
+            const whiskerLeft1 = new THREE.Mesh(whiskerGeometry, whiskerMaterial);
+            whiskerLeft1.position.set(-0.26, 1.15, 0.8);
+            whiskerLeft1.rotation.y = Math.PI/6;
+            whiskerLeft1.rotation.z = -Math.PI/2;
+            whiskerLeft1.rotation.x = -Math.PI/2;
+            characterGroup.add(whiskerLeft1);
+            
+            const whiskerLeft2 = new THREE.Mesh(whiskerGeometry, whiskerMaterial);
+            whiskerLeft2.position.set(-0.26, 1.15, 0.8);
+            whiskerLeft2.rotation.z = Math.PI/12;
+            whiskerLeft2.rotation.z = -Math.PI/2;
+            characterGroup.add(whiskerLeft2);
+            
+            const whiskerLeft3 = new THREE.Mesh(whiskerGeometry, whiskerMaterial);
+            whiskerLeft3.position.set(-0.26, 1.15, 0.8);
+            whiskerLeft3.rotation.y = -Math.PI/6;
+            whiskerLeft3.rotation.z = -Math.PI/2;
+            whiskerLeft3.rotation.x = -Math.PI/2;
+            characterGroup.add(whiskerLeft3);
+            
+            const whiskerRight1 = new THREE.Mesh(whiskerGeometry, whiskerMaterial);
+            whiskerRight1.position.set(0.26, 1.15, 0.8);
+            whiskerRight1.rotation.y = -Math.PI/6;
+            whiskerRight1.rotation.z = -Math.PI/2;
+            whiskerRight1.rotation.x = -Math.PI/2;
+            characterGroup.add(whiskerRight1);
+            
+            const whiskerRight2 = new THREE.Mesh(whiskerGeometry, whiskerMaterial);
+            whiskerRight2.position.set(0.26, 1.15, 0.8);
+            whiskerRight2.rotation.z = -Math.PI/12;
+            whiskerRight2.rotation.z = -Math.PI/2;
+            characterGroup.add(whiskerRight2);
+            
+            const whiskerRight3 = new THREE.Mesh(whiskerGeometry, whiskerMaterial);
+            whiskerRight3.position.set(0.26, 1.15, 0.8);
+            whiskerRight3.rotation.y = Math.PI/6;
+            whiskerRight3.rotation.z = -Math.PI/2;
+            whiskerRight3.rotation.x = -Math.PI/2;
+            characterGroup.add(whiskerRight3);
+
+            const tailGeometry = new THREE.CylinderGeometry(0.05, 0.05, 1, 8);
+            const tail = new THREE.Mesh(tailGeometry, bodyMaterial);
+            tail.position.set(0, 0.6, -0.6);
+            tail.rotation.x = Math.PI/-5;
+            characterGroup.add(tail);
+
+            characterGroup.position.set(
+                (0 - size / 2) * scale + scale / 2,
+                0,
+                (0 - size / 2) * scale + scale / 2
+            );
+            
+            characterGroup.rotation.y = Math.PI;
+            scene.add(characterGroup);
+
+            gameConfig.characterPosition = { x: 0, y: 0 };
+            gameConfig.direction = 0;
+            updateDirectionIndicator();
+        }
+        
+        function startGame() {
+            gameConfig.player.startTime = new Date();
+            gameConfig.player.moves = 0;
+            dom.movesDisplay.textContent = gameConfig.player.moves;
+
+            if (gameConfig.timer) clearInterval(gameConfig.timer);
+            gameConfig.timer = setInterval(updateTimer, 1000);
+
+            const level = gameConfig.levels[gameConfig.currentLevel];
+            gameConfig.maze = generateMaze(level.size, level.complexity);
+            
+            // Garantir que o Three.js está inicializado antes de renderizar
+            if (initialized) {
+                renderMaze(gameConfig.maze);
+            } else {
+                setTimeout(() => renderMaze(gameConfig.maze), 100);
+            }
+
+            dom.levelDisplay.textContent = `${gameConfig.currentLevel + 1}/${gameConfig.levels.length}`;
+            dom.levelName.textContent = level.name;
+
+            if (initialized) {
+                camera.position.set(0, level.size * 2, -level.size * 1.5);
+                camera.rotation.x = Math.PI;
+                camera.lookAt(0, 0, 0);
+            }
+
+            gameConfig.commands = [];
+            updateCommandDisplay();
+
+            if (gameConfig.musicPlaying) {
+                sounds.bgMusic.play().catch(e => console.log("Autoplay bloqueado: ", e));
+            }
+        }
+        
+        function updateDirectionIndicator() {
+            const directions = ["Norte", "Leste", "Sul", "Oeste"];
+            const arrows = ["⬆️", "➡️", "⬇️", "⬅️"];
+            dom.directionText.textContent = `Olhando para: ${directions[gameConfig.direction]}`;
+            dom.directionIndicator.textContent = arrows[gameConfig.direction];
+            
+            if (characterGroup) {
+                characterGroup.rotation.y = gameConfig.direction * Math.PI / 2;
+            }
+        }
+        
+        function addCommand(command) {
+            gameConfig.commands.push(command);
+            updateCommandDisplay();
+            
+            const buttons = document.querySelectorAll('.command-btn');
+            buttons.forEach(btn => {
+                if (btn.dataset.command === command) {
+                    btn.classList.add('highlight');
+                    setTimeout(() => btn.classList.remove('highlight'), 300);
+                }
+            });
+            
+            sounds.turn.currentTime = 0;
+            sounds.turn.play();
+        }
+        
+        function updateCommandDisplay() {
+            dom.commandSequence.innerHTML = '';
+            gameConfig.commands.forEach((cmd, index) => {
+                const chip = document.createElement('div');
+                chip.className = 'command-chip';
+                
+                const emojiMap = {
+                  'FRENTE': '⬆️',
+                  'ESQUERDA': '<span class="icone-comando girar-invertido">↪️</span>',
+                  'DIREITA': '<span class="icone-comando girar-invertido">↩️</span>'
+                };
+                
+                chip.innerHTML = `
+                    ${emojiMap[cmd] || cmd}
+                    <button class="remove-chip" data-index="${index}">✖️</button>
+                `;
+                dom.commandSequence.appendChild(chip);
+                
+                chip.querySelector('.remove-chip').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const idx = parseInt(e.target.dataset.index);
+                    gameConfig.commands.splice(idx, 1);
+                    updateCommandDisplay();
+                    sounds.error.currentTime = 0;
+                    sounds.error.play();
+                });
+            });
+        }
+        
+        async function executeCommands() {
+            if (gameConfig.commands.length === 0) return;
+            
+            document.querySelectorAll('button').forEach(btn => btn.disabled = true);
+            
+            for (let i = 0; i < gameConfig.commands.length; i++) {
+                const command = gameConfig.commands[i];
+                await executeCommand(command);
+                gameConfig.player.moves++;
+                dom.movesDisplay.textContent = gameConfig.player.moves;
+                
+                if (gameConfig.characterPosition.x === gameConfig.exitPosition.x && 
+                    gameConfig.characterPosition.y === gameConfig.exitPosition.y) {
+                    completeLevel();
+                    break;
+                }
+            }
+            
+            document.querySelectorAll('button').forEach(btn => btn.disabled = false);
+        }
+        
+        function executeCommand(command) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    switch(command) {
+                        case 'FRENTE':
+                            moveForward();
+                            break;
+                        case 'ESQUERDA':
+                            turnLeft();
+                            break;
+                        case 'DIREITA':
+                            turnRight();
+                            break;
+                    }
+                    
+                    const chips = document.querySelectorAll('.command-chip');
+                    if (chips.length > 0) {
+                        chips.forEach(chip => chip.classList.remove('highlight'));
+                        if (chips[gameConfig.commands.indexOf(command)]) {
+                            chips[gameConfig.commands.indexOf(command)].classList.add('highlight');
+                        }
+                    }
+                    
+                    resolve();
+                }, 600);
+            });
+        }
+        
+        function moveForward() {
+            const size = gameConfig.levels[gameConfig.currentLevel].size;
+            const scale = 2;
+            let newX = gameConfig.characterPosition.x;
+            let newY = gameConfig.characterPosition.y;
+            
+            switch(gameConfig.direction) {
+                case 0: newY++; break;
+                case 1: newX++; break;
+                case 2: newY--; break;
+                case 3: newX--; break;
+            }
+            
+            if (newX >= 0 && newX < size && newY >= 0 && newY < size && 
+                gameConfig.maze[newY][newX] !== 1) {
+                gameConfig.characterPosition.x = newX;
+                gameConfig.characterPosition.y = newY;
+                
+                if (characterGroup) {
+                    characterGroup.position.set(
+                        (newX - size/2) * scale + scale/2, 
+                        0, 
+                        (newY - size/2) * scale + scale/2
+                    );
+                }
+                
+                sounds.move.currentTime = 0;
+                sounds.move.play();
+                
+                if (characterGroup) {
+                    characterGroup.position.y = 0.2;
+                    setTimeout(() => {
+                        if (characterGroup) characterGroup.position.y = 0;
+                    }, 200);
+                }
+            } else {
+                if (characterGroup) {
+                    characterGroup.position.y = 0.2;
+                    setTimeout(() => {
+                        if (characterGroup) characterGroup.position.y = 0;
+                    }, 200);
+                }
+                sounds.error.currentTime = 0;
+                sounds.error.play();
+            }
+        }
+        
+        function turnLeft() {
+            gameConfig.direction = (gameConfig.direction + 3) % 4;
+            updateDirectionIndicator();
+            sounds.turn.currentTime = 0;
+            sounds.turn.play();
+        }
+        
+        function turnRight() {
+            gameConfig.direction = (gameConfig.direction + 1) % 4;
+            updateDirectionIndicator();
+            sounds.turn.currentTime = 0;
+            sounds.turn.play();
+        }
+        
+        function completeLevel() {
+            clearInterval(gameConfig.timer);
+            dom.finalMoves.textContent = gameConfig.player.moves;
+            dom.completionMessage.style.display = 'block';
+            sounds.win.currentTime = 0;
+            sounds.win.play();
+            
+            for (let i = 0; i < 20; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.animationDelay = `${Math.random() * 1}s`;
+                dom.starContainer.appendChild(star);
+                setTimeout(() => star.remove(), 2000);
+            }
+        }
+        
+        function updateTimer() {
+            if (!gameConfig.player.startTime) return;
+            
+            const now = new Date();
+            const diff = Math.floor((now - gameConfig.player.startTime) / 1000);
+            const minutes = Math.floor(diff / 60).toString().padStart(2, '0');
+            const seconds = (diff % 60).toString().padStart(2, '0');
+            
+            dom.timeDisplay.textContent = `${minutes}:${seconds}`;
+        }
+        
+        // Event listeners
+        document.querySelectorAll('.command-btn').forEach(btn => {
+            btn.addEventListener('click', () => addCommand(btn.dataset.command));
+        });
+        
+        document.getElementById('execute-btn').addEventListener('click', executeCommands);
+        document.getElementById('reset-btn').addEventListener('click', startGame);
+        document.getElementById('clear-btn').addEventListener('click', () => {
+            gameConfig.commands = [];
+            updateCommandDisplay();
+        });
+        
+        document.getElementById('next-level-btn').addEventListener('click', () => {
+            dom.completionMessage.style.display = 'none';
+            if (gameConfig.currentLevel < gameConfig.levels.length - 1) {
+                gameConfig.currentLevel++;
+                startGame();
+            } else {
+                alert('Parabéns! Você completou todos os níveis! 🏆🎊');
+                gameConfig.currentLevel = 0;
+                startGame();
+            }
+        });
+        
+        document.getElementById('player-name').addEventListener('click', () => {
+            const newName = prompt('Digite seu nome:', gameConfig.player.name);
+            if (newName) {
+                gameConfig.player.name = newName;
+                dom.playerName.textContent = newName;
+            }
+        });
+        
+        document.getElementById('music-control').addEventListener('click', () => {
+            if (gameConfig.musicPlaying) {
+                sounds.bgMusic.pause();
+                document.getElementById('music-control').textContent = '🔇';
+                gameConfig.musicPlaying = false;
+            } else {
+                sounds.bgMusic.play();
+                document.getElementById('music-control').textContent = '🎵';
+                gameConfig.musicPlaying = true;
+            }
+        });
+        
+        document.getElementById('close-help').addEventListener('click', () => {
+            document.getElementById('help-overlay').style.display = 'none';
+            startGame();
+        });
+        
+        // Initialize game
+        window.addEventListener('load', () => {
+            // Iniciar o Three.js com um pequeno atraso para garantir que o layout esteja pronto
+            setTimeout(() => {
+                initThreeJS();
+                startGame();
+            }, 100);
+            
+            window.addEventListener('resize', () => {
+                if (!dom.sceneContainer || !initialized) return;
+                
+                // Atualizar o tamanho do renderizador
+                camera.aspect = dom.sceneContainer.offsetWidth / dom.sceneContainer.offsetHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(dom.sceneContainer.offsetWidth, dom.sceneContainer.offsetHeight);
+                
+                // Atualizar a posição do marcador de saída
+                updateExitLabelPosition();
+            });
+        });
+    </script>
+</body>
+</html>
