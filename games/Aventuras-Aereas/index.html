@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Simulador de Voo Pedagógico</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="plane-selector">
+        <button class="dropdown-btn">Selecionar Missão ▼</button>
+        <div class="dropdown-content">
+            <button onclick="startMission(0)">Missão 1: Letra 'A'</button>
+            <button onclick="startMission(1)">Missão 2: Letra 'E'</button>
+            <button onclick="startMission(2)">Missão 3: Letra 'I'</button>
+            <button onclick="startMission(3)">Missão 4: Letra 'O'</button>
+            <button onclick="startMission(4)">Missão 5: Letra 'U'</button>
+            <button onclick="startMission(5)">Missão 6: FINAL 'ÃO'</button>
+            </div>
+    </div>
+
+    <div id="hud">
+        <div>Altura: <span id="altitude">0</span> m</div>
+        <div>Velocidade: <span id="speed">0</span> km/h</div>
+        <div id="mission-hud" style="display: none;">
+            <div id="mission-title"></div>
+            <div id="mission-description"></div>
+            <div>Pontos: <span id="mission-score">0</span></div>
+            <div>Coletados: <span id="mission-collected">0</span> / <span id="mission-target">0</span></div>
+        </div>
+    </div>
+   
+    <button id="camera-toggle-btn" class="camera-toggle">↻</button>
+    <div id="controls" class="mobile-controls">
+        <div class="direction-controls">
+            <div id="joystick-container">
+                <div id="joystick"></div>
+            </div>
+        </div>
+        <div class="accelerator-control">
+            <button id="accelerator-btn">Acelerador</button>
+        </div>
+    </div>
+    <div id="no-plane-selected"><h1>Selecione uma missão para começar</h1></div>
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+    <script type="module" src="missions.js"></script> 
+    <script type="module" src="controls.js"></script>
+</body>
+</html>
