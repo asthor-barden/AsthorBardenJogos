@@ -1027,6 +1027,8 @@
 
             #chatbot-window {
                 height: 450px;
+                width: 400px;
+                left: -300px;
             }
         }
     </style>
@@ -1834,7 +1836,17 @@
                 }
             });
         }
-        
+        // Fechar o menu ao clicar em um item (mobile)
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                // Verificar se o menu está aberto (mobile)
+                if (mainNav.classList.contains('active')) {
+                    mainNav.classList.remove('active');
+                }
+            });
+        });
+            
         window.addEventListener('scroll', animateOnScroll);
         animateOnScroll(); // Initialize
     </script>
