@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulação de Braço Robótico 3D Avançado</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Simulação de Braço Robótico 3D Avançado</h1>
+            <p class="subtitle">Controle realista com movimentos de mão e capacidade de pegar objetos</p>
+        </header>
+        <!-- Adicionar após o header, antes dos painéis existentes -->
+<div class="panel missions-panel">
+    <h2 class="panel-title"><i class="icon">🎯</i> Missões Disponíveis</h2>
+    
+    <div class="missions-grid">
+        <div class="mission-card" onclick="startMission('cleanup')">
+            <h4>🌲 Limpeza da Floresta</h4>
+            <p>Colete todos os objetos de lixo e coloque no cesto marrom</p>
+            <div class="mission-stats">
+                <span>⏱️ 150s</span>
+                <span>🎯 8 objetos</span>
+                <span>⭐ 3 estrelas</span>
+            </div>
+        </div>
+        
+        <div class="mission-card" onclick="startMission('wordSort')">
+            <h4>📝 Classificação de Palavras</h4>
+            <p>Separe as palavras nos cestos corretos por classificação tônica</p>
+            <div class="mission-stats">
+                <span>⏱️ 250s</span>
+                <span>🎯 9 palavras</span>
+                <span>⭐ 3 estrelas</span>
+            </div>
+        </div>
+        
+        <div class="mission-card" onclick="startMission('mathChallenge')">
+            <h4>🔢 Desafio Matemático</h4>
+            <p>Colete números que somem exatamente o valor alvo</p>
+            <div class="mission-stats">
+                <span>⏱️ 100s</span>
+                <span>🎯 Soma variável</span>
+                <span>⭐ 3 estrelas</span>
+            </div>
+        </div>
+    </div>
+</div>
+        <div class="panel">
+            <h2 class="panel-title"><i class="icon">📷</i> Detecção de Mãos</h2>
+            
+            <div class="camera-container">
+                <video id="camera" width="640" height="480" autoplay playsinline></video>
+                <canvas id="outputCanvas" width="640" height="480"></canvas>
+            </div>            
+            <div class="status-container">
+                <div class="status-card">
+                    <div class="status-label">Base (Rotação)</div>
+                    <div class="status-value" id="baseValue">0°</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-label">Ombro</div>
+                    <div class="status-value" id="shoulderValue">90°</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-label">Cotovelo</div>
+                    <div class="status-value" id="elbowValue">90°</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-label">Garra</div>
+                    <div class="status-value" id="gripperValue">Aberta</div>
+                    <div class="gripper-status">
+                        <div class="gripper-indicator gripper-open" id="gripperIndicator"></div>
+                        <span id="gripperStatusText">Aberta</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="instructions">
+                <h3>Instruções de Controle:</h3>
+                <ul>
+                    <li>Mova a mão horizontalmente para controlar a rotação da base</li>
+                    <li>Mova a mão verticalmente para controlar o ombro</li>
+                    <li>Aproxime/afaste a mão para controlar o cotovelo</li>
+                    <li>Junte polegar e indicador para fechar a garra e pegar objetos</li>
+                    <li>Use os botões de câmera para mudar o ponto de vista</li>
+                    <li>Pressione 'R' para resetar a posição do braço</li>
+                    <li>Pressione 'G' para gerar novos objetos</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <h2 class="panel-title"><i class="icon">🤖</i> Simulação 3D Realista</h2>
+            
+            <div class="three-container">
+                <canvas id="three-canvas"></canvas>
+                <div class="object-counter">Objetos: <span id="objectCount">0</span></div>
+                <div class="camera-controls">
+                    <div class="camera-btn" id="cameraFront">👁️</div>
+                    <div class="camera-btn" id="cameraTop">⬆️</div>
+                    <div class="camera-btn" id="cameraSide">↔️</div>
+                    <div class="camera-btn" id="cameraReset">🔄</div>
+                </div>
+            </div>
+            
+            <div class="range-container">
+                <label for="cameraDistance">Distância da Câmera</label>
+                <input type="range" min="10" max="30" value="15" class="range-slider" id="cameraDistance">
+                <div class="joint-info">
+                    <span>Zoom +</span>
+                    <span>Zoom -</span>
+                </div>
+            </div>
+            
+            <div class="connection-panel">
+                <div class="btn-group">
+                    <button id="invertBtn">Inverter Horizontal</button>
+                    <button id="resetBtn">Resetar Braço</button>
+                </div>
+                
+                <div class="invert-status">
+                    <div class="invert-indicator" id="invertIndicator"></div>
+                    <span id="invertStatusText">Inversão Desativada</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls-info">
+            <div class="control-card">
+                <h3><i class="icon">🔄</i> Movimentos do Braço</h3>
+                <p>O braço robótico possui 4 graus de liberdade: rotação da base, elevação do ombro, flexão do cotovelo e abertura da garra. Todos os movimentos são controlados pelos gestos da sua mão.</p>
+            </div>
+            <div class="control-card">
+                <h3><i class="icon">🎮</i> Interação com Objetos</h3>
+                <p>Quando a garra está fechada e próxima de um objeto, ela automaticamente o captura. Para soltar, basta abrir a garra. Objetos podem ser reposicionados com 'G'.</p>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Sistema de Controle de Braço Robótico 3D | Design Realista | MediaPipe + Three.js</p>
+        </footer>
+    </div>
+
+<script src="js/missions.js"></script>
+<script src="js/audio.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/threeSetup.js"></script>
+    <script src="js/robotArm.js"></script>
+    <script src="js/objects.js"></script>
+    <script src="js/handProcessing.js"></script>
+    <script src="js/controls.js"></script>
+    <script src="js/mediapipe.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
