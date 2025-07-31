@@ -1117,8 +1117,8 @@
         }
         
         function updateDirectionIndicator() {
-            const directions = ["Norte", "Leste", "Sul", "Oeste"];
-            const arrows = ["⬆️", "➡️", "⬇️", "⬅️"];
+            const directions = ["Norte", "Oeste", "Sul", "Leste"];
+            const arrows = ["⬆️", "⬅️", "⬇️", "➡️"];
             dom.directionText.textContent = `Olhando para: ${directions[gameConfig.direction]}`;
             dom.directionIndicator.textContent = arrows[gameConfig.direction];
             
