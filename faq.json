@@ -103,6 +103,10 @@
     "pergunta": "como comprar bloco+",
     "resposta": "Para adquirir o Bloco+, entre em contato conosco! 📞 Email: contato@asthorbarden.com.br ou telefone +55 11 3040-5000. Nossa equipe pode apresentar as melhores opções para sua instituição!"
   },
+   {
+    "pergunta": "posso comprar o kit?",
+    "resposta": "Para adquirir o Bloco+, entre em contato conosco! 📞 Email: contato@asthorbarden.com.br ou telefone +55 11 3040-5000. Nossa equipe pode apresentar as melhores opções para sua instituição!"
+  },
   {
     "pergunta": "Onde comprar?",
     "resposta": "Para adquirir o Bloco+, entre em contato conosco! 📞 Email: contato@asthorbarden.com.br ou telefone +55 11 3040-5000. Nossa equipe pode apresentar as melhores opções para sua instituição!"
@@ -1133,5 +1137,25 @@
    {
     "pergunta": "como joga?",
     "resposta": "Para começar a jogar, vai ate a seção Jogos, escolha um jogo e clique em 'Jogar'. Siga as instruções na tela para aprender os controles e objetivos de cada jogo!"
+  }
+  ,
+   {
+    "pergunta": "quem te fez?",
+    "resposta": "Eu sou criado pela Asthor Barden, uma empresa apaixonada por transformar a educação brasileira através de jogos criativos e inovadores! 🎮✨"
+  }
+   ,
+   {
+    "pergunta": "quem te criou",
+    "resposta": "Eu sou criado pela Asthor Barden, uma empresa apaixonada por transformar a educação brasileira através de jogos criativos e inovadores! 🎮✨"
+  }
+   ,
+   {
+    "pergunta": "quem fez você?",
+    "resposta": "Eu sou criado pela Asthor Barden, uma empresa apaixonada por transformar a educação brasileira através de jogos criativos e inovadores! 🎮✨"
+  }
+   ,
+   {
+    "pergunta": "quem treinou vocé",
+    "resposta": "Eu sou criado pela Asthor Barden, uma empresa apaixonada por transformar a educação brasileira através de jogos criativos e inovadores! 🎮✨"
   }
 ]
