@@ -1307,23 +1307,23 @@
                 
                 <!-- Adicione mais 7 jogos seguindo o mesmo padrão -->
                 <!-- Game 4 -->
-                 <!--
+                 
                 <div class="game-card">
-                    <img src="assets/games/math-adventure.jpg" alt="Aventura Matemática" class="game-card-image">
+                    <img src="img/labirinto explosivo.png" alt="Aventura Matemática" class="game-card-image">
                     <div class="game-card-content">
-                        <h3 class="game-card-title">Aventura Matemática</h3>
-                        <p class="game-card-description">Resolva problemas matemáticos em um mundo de aventura. Adição, subtração e multiplicação nunca foram tão divertidas.</p>
+                        <h3 class="game-card-title">Labirinto-Explosivo</h3>
+                        <p class="game-card-description">Pegue o ponto verde e o leve até o final do labirinto.</p>
                         <div class="game-card-footer">
                             <div class="game-card-tags">
-                                <span class="game-tag">Matemática</span>
-                                <span class="game-tag">Aventura</span>
-                                <span class="game-tag">6-9 anos</span>
+                                <span class="game-tag">Realidade Aumentada</span>
+                                <span class="game-tag">Condenação Motora</span>
+                                <span class="game-tag">6-12 anos</span>
                             </div>
-                            <button class="game-card-btn" onclick="openGame('aventura-matematica')">Jogar</button>
+                            <button class="game-card-btn" onclick="openGame('labirinto-explosivo')">Jogar</button>
                         </div>
                     </div>
                 </div>
-            -->
+            
                 <!-- Game 5 -->
                  <!--
                 <div class="game-card">
@@ -1794,7 +1794,57 @@
                         </div>
                     `;
                     break;
-                
+                case 'labirinto-explosivo':
+                    gameContent = `
+                        <div class="game-header">
+                            <button class="game-back-btn" onclick="closeGame()">
+                                <i class="icon-arrow-left"></i> Voltar
+                            </button>
+                            <h1 class="game-title">Labirnto Explosivo</h1>
+                        </div>
+                        <div class="game-content">
+                            <div class="tutorial-section">
+                                <h2 class="tutorial-title">Tutorial</h2>
+                                <div class="tutorial-steps">
+                                    <div class="tutorial-step active">
+                                        <h3 class="tutorial-step-title">Configuração Inicial</h3>
+                                        <div class="tutorial-step-content">
+                                            <div class="tutorial-media">
+                                                <img src="img/labirinto explosivo.png" alt="Configuração do Braço Robótico">
+                                            </div>
+                                            <p>Posicione a mão na frente da camera, pegue o ponto verde e o leve para o final do labirinto evitando bater nas paredes.</p>
+                                        </div>
+                                    </div>
+                                    <div class="tutorial-step">
+                                        <h3 class="tutorial-step-title">Controles de Movimento</h3>
+                                        <div class="tutorial-step-content">
+                                            <div class="tutorial-media">
+                                                <img src="img/labirinto explosivo1.png" alt="Controles do Braço Robótico">
+                                            </div>
+                                            <p>Chegue no final com pontos suficientes para avançar de fase</p>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                                
+                                <div class="tutorial-navigation">
+                                    <button class="tutorial-btn tutorial-prev" onclick="prevTutorialStep()">Anterior</button>
+                                    <button class="tutorial-btn tutorial-next" onclick="nextTutorialStep()">Próximo</button>
+                                </div>
+                                <button class="tutorial-skip" onclick="startGame('braco-robotico')">Pular tutorial e começar</button>
+                            </div>
+                            
+                            <div class="game-frame-container" style="display: none;">
+                                <iframe src="games/Labirinto-explosivo/index.html" class="game-frame" id="gameFrame"></iframe>
+                                <button id="fullscreen-btn" class="fullscreen-btn" title="Tela Cheia">
+                                    <svg viewBox="0 0 24 24">
+                                        <path fill="white" d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    break;
                 // Generic tutorial for other games
                 default:
                     gameContent = `
