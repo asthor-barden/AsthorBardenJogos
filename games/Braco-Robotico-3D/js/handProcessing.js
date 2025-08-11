@@ -115,8 +115,8 @@ function smoothDepthValue(newValue) {
 
 function detectPinchGesture(landmarks) {
     // === USAR A FÓRMULA ORIGINAL QUE FUNCIONAVA BEM ===
-    const thumbTip = landmarks[4];
-    const indexTip = landmarks[8];
+    const thumbTip = landmarks[3];
+    const indexTip = landmarks[7];
     
     // Fórmula original com potência 4 (mais sensível)
     const distance = Math.sqrt(
@@ -150,11 +150,11 @@ function processHandData(landmarks) {
     const servoShoulder = mapValue(palmCenter.y, 0.2, 0.8, 270, 180);
     
     // Controle de profundidade (cotovelo) - baseado na distância estável do punho
-    const servoElbow = mapValue(smoothedDepth, 0.08, 0.25, 100, -10);
+    const servoElbow = mapValue(smoothedDepth, 0.2, 0.4, -10, 100);
     
     // === DETECÇÃO DE PINÇA COM FÓRMULA ORIGINAL ===
     const isPinching = detectPinchGesture(landmarks);
-    const servoGripper = isPinching ? 110 : 180;
+    const servoGripper = isPinching ? 110 : 170;
     
     // === ATUALIZAR VALORES NA UI ===
     baseValue.textContent = `${Math.round(servoBase)}°`;
