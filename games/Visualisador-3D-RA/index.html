@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Realidade Aumentada com Mãos</title>
+  <style>
+    body {
+      margin: 0; padding: 0; overflow: hidden;
+      background: #000;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    #container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #cameraFeed {
+      position: absolute;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+    }
+
+    #threeCanvas {
+      position: absolute;
+      width: 100%; height: 100%;
+      z-index: 10;
+    }
+
+    #loading {
+      position: absolute;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      color: white;
+      z-index: 100;
+      transition: opacity 0.5s;
+    }
+
+    #setupModal {
+      position: fixed;
+      z-index: 999;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #setupModal select, #setupModal button {
+      margin: 10px;
+      padding: 10px;
+      font-size: 40px;
+    }
+
+    #btnBack {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      z-index: 1000;
+      padding: 10px 15px;
+      font-size: 40px;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.8);
+      border: none;
+      border-radius: 5px;
+      display: none;
+    }
+
+    /* Estilo para o controle deslizante */
+    #sizeControlContainer {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 15px;
+      border-radius: 10px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    #sizeControlContainer label {
+      color: white;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    #sizeSlider {
+      width: 200px;
+      height: 10px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: rgba(255, 255, 255, 0.2);
+      outline: none;
+      border-radius: 5px;
+    }
+
+    #sizeSlider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #4CAF50;
+      cursor: pointer;
+    }
+
+    #sizeSlider::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #4CAF50;
+      cursor: pointer;
+      border: none;
+    }
+
+    #resetSizeBtn {
+      margin-top: 10px;
+      padding: 5px 10px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    #resetSizeBtn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <video id="cameraFeed" playsinline></video>
+    <canvas id="threeCanvas"></canvas>
+
+    <div id="loading">
+      <div class="spinner"></div>
+      <h1>Carregando Aplicação</h1>
+      <div id="loadingStatus">Inicializando...</div>
+    </div>
+
+    <div id="setupModal">
+      <h2>Configuração Inicial</h2>
+      <label>Qual mão você vai usar?</label>
+      <select id="handSelect">
+        <option value="right">Mão Direita</option>
+        <option value="left">Mão Esquerda</option>
+      </select>
+
+      <label>Escolha o objeto 3D:</label>
+      <select id="objectSelect">
+        <option value="cancela.js">Cancela</option>
+        <option value="ceres.js">Ceres</option>
+        <option value="convMovI.js">ConvMov I</option>
+        <option value="convMovII.js">ConvMov II</option>
+         <option value="elevador.js">Elevador</option>
+      </select>
+
+      <button id="startApp">Iniciar</button>
+    </div>
+
+    <button id="btnBack" href="index.html">Voltar</button>
+    
+    <!-- Controle deslizante para ajuste de tamanho -->
+    <div id="sizeControlContainer">
+      <label for="sizeSlider">Tamanho do Objeto</label>
+      <input type="range" id="sizeSlider" min="0.1" max="3" step="0.1" value="1">
+      <button id="resetSizeBtn">Redefinir</button>
+    </div>
+  </div>
+
+  <!-- Bibliotecas -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.134/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.134/examples/js/loaders/OBJLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.134/examples/js/loaders/MTLLoader.js"></script>
+  <script>
+    let scene, camera, renderer, objeto3D;
+    let handDetected = false;
+    let usarMaoEsquerda = false;
+    let smoothedHandPosition = { x: 0, y: 0, z: 0 };
+    let smoothedRotation = new THREE.Quaternion();
+    let scaleFactor = 1;
+    const smoothingFactor = 0.5;
+    let manualScaleFactor = 1; // Novo fator de escala manual
+
+    const videoElement = document.getElementById('cameraFeed');
+    const canvasElement = document.getElementById('threeCanvas');
+    const loadingElement = document.getElementById('loading');
+    const loadingStatus = document.getElementById('loadingStatus');
+    const setupModal = document.getElementById('setupModal');
+    const btnBack = document.getElementById('btnBack');
+    const sizeControlContainer = document.getElementById('sizeControlContainer');
+    const sizeSlider = document.getElementById('sizeSlider');
+    const resetSizeBtn = document.getElementById('resetSizeBtn');
+
+    let animationId = null;
+    let cameraInstance = null;
+    let handsInstance = null;
+
+    // Armazenar valores iniciais do objeto para manter rotação e escala originais
+    let initialRotation = new THREE.Quaternion();
+    let initialScale = new THREE.Vector3(1, 1, 1);
+
+    function updateLoadingStatus(message) {
+      loadingStatus.textContent = message;
+    }
+
+    function loadScript(filename) {
+      return new Promise((resolve, reject) => {
+        // Remover script anterior, se existir
+        const oldScript = document.querySelector(`script[src="${filename}"]`);
+        if (oldScript) oldScript.remove();
+
+        const script = document.createElement('script');
+        script.src = filename;
+        script.onload = resolve;
+        script.onerror = () => reject(new Error("Erro ao carregar " + filename));
+        document.body.appendChild(script);
+      });
+    }
+
+    function initThreeJS() {
+      scene = new THREE.Scene();
+      const light = new THREE.AmbientLight(0xffffff, 1);
+      scene.add(light);
+
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 5;
+
+      renderer = new THREE.WebGLRenderer({ canvas: canvasElement, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+
+      // Criar objeto conforme função disponível
+      if (typeof criarObjeto3D === 'function') {
+        objeto3D = criarObjeto3D();
+      } else if (typeof createCancela === 'function') {
+        objeto3D = createCancela();
+      } else if (typeof createCeres === 'function') {
+        objeto3D = createCeres();
+      } else if (typeof createConvMovI === 'function') {
+        objeto3D = createConvMovI();
+      } else if (typeof createConvMovII === 'function') {
+        objeto3D = createConvMovII();
+      }else if (typeof createElevador === 'function') {
+        objeto3D = createElevador();
+      }
+
+      if (objeto3D) {
+        scene.add(objeto3D);
+
+        // Guardar rotação e escala iniciais
+        initialRotation.copy(objeto3D.quaternion);
+        initialScale.copy(objeto3D.scale);
+      }
+    }
+
+    function setupMediaPipe() {
+      handsInstance = new Hands({
+        locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+      });
+
+      handsInstance.setOptions({
+        maxNumHands: 1,
+        modelComplexity: 1,
+        minDetectionConfidence: 0.8,
+        minTrackingConfidence: 0.8
+      });
+
+      handsInstance.onResults(onHandResults);
+
+      cameraInstance = new Camera(videoElement, {
+        onFrame: async () => {
+          await handsInstance.send({ image: videoElement });
+        },
+        width: 1280,
+        height: 720
+      });
+
+      cameraInstance.start();
+    }
+
+    function onHandResults(results) {
+      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        const landmarks = results.multiHandLandmarks[0];
+        handDetected = true;
+
+        const palmIndices = [0, 5, 9, 13, 17];
+        let avgX = 0, avgY = 0, avgZ = 0;
+        palmIndices.forEach(i => {
+          avgX += landmarks[i].x;
+          avgY += landmarks[i].y;
+          avgZ += landmarks[i].z;
+        });
+        avgX /= palmIndices.length;
+        avgY /= palmIndices.length;
+        avgZ /= palmIndices.length;
+
+        const screenX = (0.5 - avgX) * 10;
+        const screenY = (0.5 - avgY) * 10;
+        const screenZ = (avgZ - 0.5) * 10;
+
+        smoothedHandPosition.x += (screenX - smoothedHandPosition.x) * smoothingFactor;
+        smoothedHandPosition.y += (screenY - smoothedHandPosition.y) * smoothingFactor;
+        smoothedHandPosition.z += (screenZ - smoothedHandPosition.z) * smoothingFactor;
+
+        const wrist = landmarks[12];
+        const middle = landmarks[0];
+        const yAxis = new THREE.Vector3(middle.x - wrist.x, middle.y - wrist.y, middle.z - wrist.z).normalize();
+
+        let indexBase, pinkyBase;
+        if (usarMaoEsquerda) {
+          indexBase = landmarks[5];
+          pinkyBase = landmarks[17];
+        } else {
+          indexBase = landmarks[17];
+          pinkyBase = landmarks[5];
+        }
+
+        const xAxis = new THREE.Vector3(pinkyBase.x - indexBase.x, pinkyBase.y - indexBase.y, pinkyBase.z - indexBase.z).normalize();
+        const zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis).normalize();
+        const xAxisCorrected = new THREE.Vector3().crossVectors(yAxis, zAxis).normalize();
+
+        const rotationMatrix = new THREE.Matrix4().makeBasis(xAxisCorrected, yAxis, zAxis);
+        const targetQuat = new THREE.Quaternion().setFromRotationMatrix(rotationMatrix);
+        smoothedRotation.slerp(targetQuat, smoothingFactor);
+
+        const distance = Math.sqrt(
+          Math.pow(indexBase.x - pinkyBase.x, 2) +
+          Math.pow(indexBase.y - pinkyBase.y, 2) +
+          Math.pow(indexBase.z - pinkyBase.z, 2)
+        );
+        scaleFactor = 0.3 + (distance - 0.05) * 5;
+      } else {
+        handDetected = false;
+      }
+    }
+
+    function animate() {
+      animationId = requestAnimationFrame(animate);
+      if (handDetected && objeto3D) {
+        objeto3D.position.set(smoothedHandPosition.x, smoothedHandPosition.y, smoothedHandPosition.z);
+
+        // Aplica a rotação original multiplicada pela rotação detectada (smoothedRotation)
+        objeto3D.quaternion.copy(initialRotation).multiply(smoothedRotation);
+
+        // Aplica a escala original multiplicada pelo scaleFactor e pelo fator manual
+        objeto3D.scale.set(
+          initialScale.x * scaleFactor * manualScaleFactor,
+          initialScale.y * scaleFactor * manualScaleFactor,
+          initialScale.z * scaleFactor * manualScaleFactor
+        );
+      }
+      renderer.render(scene, camera);
+    }
+
+    async function startApp() {
+      const handSelect = document.getElementById('handSelect');
+      const objectSelect = document.getElementById('objectSelect');
+      usarMaoEsquerda = handSelect.value === 'left';
+      const selectedScript = objectSelect.value;
+
+      setupModal.style.display = 'none';
+      btnBack.style.display = 'block';
+      sizeControlContainer.style.display = 'flex'; // Mostrar o controle de tamanho
+      loadingElement.style.opacity = '1';
+      loadingElement.style.display = 'flex';
+      updateLoadingStatus("Carregando objeto 3D...");
+
+      try {
+        await loadScript(selectedScript);
+        updateLoadingStatus("Inicializando Three.js...");
+        initThreeJS();
+
+        updateLoadingStatus("Configurando MediaPipe...");
+        setupMediaPipe();
+
+        updateLoadingStatus("Iniciando animação...");
+        animate();
+
+        setTimeout(() => {
+          loadingElement.style.opacity = '0';
+          setTimeout(() => loadingElement.style.display = 'none', 500);
+        }, 2000);
+      } catch (e) {
+        updateLoadingStatus("Erro: " + e.message);
+      }
+    }
+
+    function stopApp() {
+      // Parar animação
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+      }
+
+      // Parar câmera MediaPipe
+      if (cameraInstance) {
+        cameraInstance.stop();
+        cameraInstance = null;
+      }
+
+      if (handsInstance) {
+        handsInstance.close();
+        handsInstance = null;
+      }
+
+      // Limpar cena e remover objeto 3D
+      if (objeto3D) {
+        scene.remove(objeto3D);
+        objeto3D.geometry?.dispose?.();
+        objeto3D.material?.dispose?.();
+        objeto3D = null;
+      }
+
+      // Limpar Three.js (renderer)
+      if (renderer) {
+        renderer.dispose();
+        renderer.forceContextLoss();
+        renderer.context = null;
+        renderer.domElement = null;
+        renderer = null;
+      }
+
+      // Resetar variáveis
+      handDetected = false;
+      smoothedHandPosition = { x: 0, y: 0, z: 0 };
+      smoothedRotation = new THREE.Quaternion();
+      scaleFactor = 1;
+      manualScaleFactor = 1; // Resetar o fator manual também
+      initialRotation = new THREE.Quaternion();
+      initialScale = new THREE.Vector3(1, 1, 1);
+
+      // Resetar o slider para o valor padrão
+      sizeSlider.value = 1;
+
+      // Mostrar modal de configuração
+      setupModal.style.display = 'flex';
+      btnBack.style.display = 'none';
+      sizeControlContainer.style.display = 'none'; // Esconder o controle de tamanho
+
+      // Mostrar loading e esconder canvas e vídeo para resetar visual
+      loadingElement.style.display = 'none';
+
+      // Recriar canvas para Three.js para evitar problemas
+      canvasElement.width = window.innerWidth;
+      canvasElement.height = window.innerHeight;
+    }
+
+    // Event listeners para o controle de tamanho
+    sizeSlider.addEventListener('input', function() {
+      manualScaleFactor = parseFloat(this.value);
+    });
+
+    resetSizeBtn.addEventListener('click', function() {
+      manualScaleFactor = 1;
+      sizeSlider.value = 1;
+    });
+
+    document.getElementById('startApp').addEventListener('click', startApp);
+    btnBack.addEventListener('click', () => {
+      window.location.href = 'index.html'; // Redireciona para index.html
+      // Ou, se preferir recarregar a página atual:
+      // window.location.reload();
+    });
+
+    // Ajusta o tamanho do renderer se a janela for redimensionada
+    window.addEventListener('resize', () => {
+      if (renderer && camera) {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+    });
+  </script>
+</body>
+</html>
