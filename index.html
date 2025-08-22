@@ -1250,8 +1250,25 @@
                 <h2 class="section-title">Nossos Jogos Pedagógicos</h2>
                 <p class="section-subtitle">Jogos interativos desenvolvidos para tornar o aprendizado divertido e eficaz</p>
             </div>
-            <!-- Visualizador 3D RA-->
+                       
             <div class="games-grid">
+                 <!-- Visualizador 3D-->
+                <div class="game-card">
+                    <img src="img/tutorial-visualizador-3d-1.png" alt="Visualizador 3D " class="game-card-image">
+                    <div class="game-card-content">
+                        <h3 class="game-card-title">Visualizador 3D</h3>
+                        <p class="game-card-description">Visualise objetos 3D. Modelos em 3D dos projetos da Asthor Barden. Use o visualizador para ajudar a montar ou ver detalhes de cada projetos.</p>
+                        <div class="game-card-footer">
+                            <div class="game-card-tags">
+                                
+                                <span class="game-tag">Visualizador 3D</span>
+                                <span class="game-tag">Sem restrição de idade</span>
+                            </div>
+                            <button class="game-card-btn" onclick="openGame('visualizador-3d')">Jogar</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Visualizador 3D RA-->
                 <div class="game-card">
                     <img src="img/tutorial-visualizador-3d-RA-1.png" alt="Visualizador 3D em Realidade Aumentada" class="game-card-image">
                     <div class="game-card-content">
@@ -1530,6 +1547,65 @@
             let gameContent = '';
             
             switch(gameId) {
+                case 'visualizador-3d':
+                    gameContent = `
+                        <div class="game-header">
+                            <button class="game-back-btn" onclick="closeGame()">
+                                <i class="icon-arrow-left"></i> Voltar
+                            </button>
+                            <h1 class="game-title">Visualizador 3D</h1>
+                        </div>
+                        <div class="game-content">
+                            <div class="tutorial-section">
+                                <h2 class="tutorial-title">Tutorial</h2>
+                                <div class="tutorial-steps">
+                                    <div class="tutorial-step active">
+                                        <h3 class="tutorial-step-title">Introdução</h3>
+                                        <div class="tutorial-step-content">
+                                            <div class="tutorial-media">
+                                                <img src="img/tutorial-visualizador-3d-2.png" alt="Introdução ao Visualizador 3D">
+                                            </div>
+                                            <p>Bem-vindo ao Visualizador 3D! Neste tutorial, vamos entender como usar o Visualizador 3D para visualizar objetos 3D dos projetos da Asthor Barden.</p>
+                                        </div>
+                                    </div>
+                                    <div class="tutorial-step">
+                                        <h3 class="tutorial-step-title">Projetos</h3>
+                                        <div class="tutorial-step-content">
+                                            <div class="tutorial-media">
+                                                <img src="img/tutorial-visualizador-3d-3.png" alt="Opções de projetos">
+                                            </div>
+                                            <p>Escolha qual o projeto que deseja visualizar.</p>
+                                        </div>
+                                    </div>
+                                    <div class="tutorial-step">
+                                        <h3 class="tutorial-step-title">Movimentação e zoom</h3>
+                                        <div class="tutorial-step-content">
+                                            <div class="tutorial-media">
+                                                <img src="img/tutorial-visualizador-3d-4.png" alt="Visualizando Objetos 3D">
+                                            </div>
+                                            <p>use o mouse ou toque na tela para rotacionar e dar zoom no objeto. Garantindo uma melhor visualização.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tutorial-navigation">
+                                    <button class="tutorial-btn tutorial-prev" onclick="prevTutorialStep()">Anterior</button>
+                                    <button class="tutorial-btn tutorial-next" onclick="nextTutorialStep()">Próximo</button>
+                                </div>
+                                <button class="tutorial-skip" onclick="startGame('visualizador-3d')">Pular tutorial e começar</button>
+                            </div>
+                            
+                            <div class="game-frame-container" style="display: none;">
+                                <iframe src="games/Visualizador-3D/index.html" class="game-frame" id="gameFrame"></iframe>
+                                <button id="fullscreen-btn" class="fullscreen-btn" title="Tela Cheia">
+                                    <svg viewBox="0 0 24 24">
+                                        <path fill="white" d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                
                 case 'visualizador-3d-ra':
                     gameContent = `
                         <div class="game-header">
@@ -1552,7 +1628,7 @@
                                         </div>
                                     </div>
                                     <div class="tutorial-step">
-                                        <h3 class="tutorial-step-title">Blocos de Comando</h3>
+                                        <h3 class="tutorial-step-title">Configurações do visualizador</h3>
                                         <div class="tutorial-step-content">
                                             <div class="tutorial-media">
                                                 <img src="img/tutorial-visualizador-3d-RA-2.png" alt="Opções para a Realidade Aumentada">
@@ -1561,7 +1637,7 @@
                                         </div>
                                     </div>
                                     <div class="tutorial-step">
-                                        <h3 class="tutorial-step-title">Executando o Programa</h3>
+                                        <h3 class="tutorial-step-title">Ajuste de tamanho</h3>
                                         <div class="tutorial-step-content">
                                             <div class="tutorial-media">
                                                 <img src="img/tutorial-visualizador-3d-RA-4.png" alt="Visualizando Objetos 3D - Realidade Aumentada">
